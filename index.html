@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sharon's Live Desktop Dashboard</title>
+<style>
+:root{color-scheme:dark;--cyan:#67e8f9;--muted:#cbd5e1;--line:rgba(255,255,255,.1)}*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Inter,Segoe UI,Arial,sans-serif;color:#fff;background:radial-gradient(circle at 20% 10%,rgba(34,211,238,.18),transparent 28%),radial-gradient(circle at 80% 75%,rgba(99,102,241,.16),transparent 30%),linear-gradient(135deg,#020617,#0f172a 55%,#083344)}.wrap{max-width:1280px;margin:auto;padding:48px}.top{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:40px}.eyebrow{color:var(--cyan);font-size:13px;letter-spacing:.28em;text-transform:uppercase}.time{font-size:72px;font-weight:650;letter-spacing:-3px;margin:10px 0}.date,.weather-sub{color:var(--muted)}.weather,.card{background:rgba(255,255,255,.07);border:1px solid var(--line);backdrop-filter:blur(16px);border-radius:24px;box-shadow:0 25px 60px rgba(0,0,0,.25)}.weather{padding:20px 24px;min-width:260px}.temp{font-size:34px;font-weight:650}.grid{display:grid;grid-template-columns:2fr 1fr;gap:24px}.card{padding:28px}.card h2{font-size:26px;margin:5px 0 22px}.task{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.06);padding:14px 16px;border-radius:16px;margin:10px 0}.task span{flex:1}.task button,.add button{border:0;cursor:pointer}.task button{background:none;color:#94a3b8;font-size:20px}.add{display:flex;gap:10px;margin-top:18px}.add input{flex:1;background:rgba(255,255,255,.1);border:1px solid var(--line);border-radius:12px;padding:14px;color:white;font-size:16px;outline:none}.add button{background:#22d3ee;color:#082f49;border-radius:12px;padding:0 18px;font-size:25px;font-weight:700}.note{font-size:12px;color:#64748b;margin-top:14px}.trip{min-height:320px;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(180deg,rgba(34,211,238,.17),rgba(99,102,241,.08))}.trip h2{font-size:42px;margin:8px 0}.days{font-size:82px;font-weight:650;line-height:1}.footer{text-align:center;color:#64748b;font-size:14px;margin-top:28px}@media(max-width:800px){.wrap{padding:28px}.top{align-items:stretch;flex-direction:column}.time{font-size:58px}.grid{grid-template-columns:1fr}.weather{min-width:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><div class="eyebrow" id="greeting">Good morning, Sharon</div><div class="time" id="time">--:--</div><div class="date" id="date"></div></div>
+    <div class="weather"><div class="eyebrow">Madison weather</div><div class="temp" id="temp">--°</div><div class="weather-sub" id="conditions">Loading weather...</div></div>
+  </header>
+  <main class="grid">
+    <section class="card"><div class="eyebrow">Focus</div><h2>Today's list</h2><div id="tasks"></div><div class="add"><input id="newTask" placeholder="Add something..." aria-label="New task"><button id="addTask" aria-label="Add task">+</button></div><div class="note">Tasks and completion status are saved only in this browser on this device.</div></section>
+    <section class="card trip"><div><div style="font-size:34px">✈</div><div class="eyebrow" style="margin-top:15px">Next adventure</div><h2>Cancún</h2><div class="date">November 18, 2026</div></div><div><div class="days" id="days">--</div><div class="date" id="daysLabel">days to go</div></div></section>
+  </main>
+  <div class="footer">A calm place to start the day.</div>
+</div>
+<script>
+const KEY='sharonDashboardTasksV1';
+let tasks;
+try{tasks=JSON.parse(localStorage.getItem(KEY))||[{text:"Check today's priorities",done:false},{text:'Review calendar',done:false},{text:'Take a real lunch break',done:false}]}catch{tasks=[]}
+function save(){localStorage.setItem(KEY,JSON.stringify(tasks));}
+function renderTasks(){const box=document.getElementById('tasks');box.innerHTML='';tasks.forEach((t,i)=>{const row=document.createElement('div');row.className='task';const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!t.done;cb.onchange=()=>{t.done=cb.checked;save();renderTasks()};const text=document.createElement('span');text.textContent=t.text;text.style.textDecoration=t.done?'line-through':'none';text.style.opacity=t.done?'.55':'1';const del=document.createElement('button');del.textContent='×';del.title='Delete';del.onclick=()=>{tasks.splice(i,1);save();renderTasks()};row.append(cb,text,del);box.append(row)});}
+function addTask(){const input=document.getElementById('newTask'),text=input.value.trim();if(!text)return;tasks.push({text,done:false});input.value='';save();renderTasks();}
+document.getElementById('addTask').onclick=addTask;document.getElementById('newTask').addEventListener('keydown',e=>{if(e.key==='Enter')addTask()});renderTasks();
+function tick(){const now=new Date();document.getElementById('time').textContent=now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});document.getElementById('date').textContent=now.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});const h=now.getHours();document.getElementById('greeting').textContent=`Good ${h<12?'morning':h<18?'afternoon':'evening'}, Sharon`;const trip=new Date('2026-11-18T00:00:00');const days=Math.max(0,Math.ceil((trip-now)/86400000));document.getElementById('days').textContent=days;document.getElementById('daysLabel').textContent=days===1?'day to go':'days to go';}tick();setInterval(tick,1000);
+const labels={0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Cloudy',45:'Foggy',48:'Foggy',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Rain showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorms'};
+async function weather(){try{const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=43.0731&longitude=-89.4012&current=temperature_2m,weather_code&temperature_unit=fahrenheit');if(!r.ok)throw new Error();const d=await r.json();document.getElementById('temp').textContent=`${Math.round(d.current.temperature_2m)}°F`;document.getElementById('conditions').textContent=`Madison, WI · ${labels[d.current.weather_code]||'Current conditions'}`}catch{document.getElementById('conditions').textContent='Weather unavailable'}}weather();setInterval(weather,15*60*1000);
+</script>
+</body>
+</html>
